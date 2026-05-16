@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { useGetMe, User } from "@workspace/api-client-react";
-import { setAuthTokenGetter } from "@workspace/api-client-react/src/custom-fetch";
+import { useGetMe, setAuthTokenGetter } from "@workspace/api-client-react";
+import type { User } from "@workspace/api-client-react";
 import { useLocation } from "wouter";
 import { Loader2 } from "lucide-react";
 

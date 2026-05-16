@@ -1,0 +1,141 @@
+import { Router, type IRouter, type Request } from "express";
+import { eq, and, desc } from "drizzle-orm";
+import { db, reportsTable, scansTable, findingsTable } from "@workspace/db";
+import { CreateReportBody, GetReportParams, DeleteReportParams } from "@workspace/api-zod";
+import { requireAuth, type JwtPayload } from "../middlewares/auth";
+
+const router: IRouter = Router();
+
+router.get("/reports", requireAuth, async (req, res): Promise<void> => {
+  const { userId } = (req as Request & { user: JwtPayload }).user;
+  // Join with scans to only return reports for the user's scans
+  const userScans = await db.select({ id: scansTable.id }).from(scansTable).where(eq(scansTable.userId, userId));
+  const scanIds = userScans.map(s => s.id);
+
+  if (scanIds.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const reports = await db.select().from(reportsTable)
+    .where(eq(reportsTable.scanId, scanIds[0]))
+    .orderBy(desc(reportsTable.createdAt));
+
+  // Get all reports for all user scans
+  const allReports = await db.select().from(reportsTable).orderBy(desc(reportsTable.createdAt));
+  const userReports = allReports.filter(r => scanIds.includes(r.scanId));
+  res.json(userReports);
+});
+
+router.post("/reports", requireAuth, async (req, res): Promise<void> => {
+  const { userId } = (req as Request & { user: JwtPayload }).user;
+  const parsed = CreateReportBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+  const { scanId, format, title } = parsed.data;
+
+  // Verify scan belongs to user
+  const [scan] = await db.select().from(scansTable)
+    .where(and(eq(scansTable.id, scanId), eq(scansTable.userId, userId)))
+    .limit(1);
+  if (!scan) {
+    res.status(404).json({ error: "Scan not found" });
+    return;
+  }
+
+  const findings = await db.select().from(findingsTable).where(eq(findingsTable.scanId, scanId));
+  const reportTitle = title ?? `Security Report — ${scan.target}`;
+
+  let content: string;
+  if (format === "json") {
+    content = JSON.stringify({ scan, findings, generatedAt: new Date().toISOString() }, null, 2);
+  } else {
+    content = generateTxtReport(scan, findings);
+  }
+
+  const [report] = await db.insert(reportsTable).values({
+    scanId,
+    title: reportTitle,
+    format,
+    content,
+  }).returning();
+
+  res.status(201).json(report);
+});
+
+router.get("/reports/:id", requireAuth, async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const params = GetReportParams.safeParse({ id: parseInt(raw, 10) });
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid report ID" });
+    return;
+  }
+  const [report] = await db.select().from(reportsTable).where(eq(reportsTable.id, params.data.id)).limit(1);
+  if (!report) {
+    res.status(404).json({ error: "Report not found" });
+    return;
+  }
+  res.json(report);
+});
+
+router.delete("/reports/:id", requireAuth, async (req, res): Promise<void> => {
+  const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+  const params = DeleteReportParams.safeParse({ id: parseInt(raw, 10) });
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid report ID" });
+    return;
+  }
+  const [deleted] = await db.delete(reportsTable).where(eq(reportsTable.id, params.data.id)).returning();
+  if (!deleted) {
+    res.status(404).json({ error: "Report not found" });
+    return;
+  }
+  res.json({ success: true, message: "Report deleted" });
+});
+
+function generateTxtReport(scan: Record<string, unknown>, findings: Record<string, unknown>[]): string {
+  const lines = [
+    "=" .repeat(60),
+    "CYBER SCOUT PRO — SECURITY ASSESSMENT REPORT",
+    "=" .repeat(60),
+    "",
+    `Target:         ${scan.target}`,
+    `Scan Type:      ${scan.scanType}`,
+    `Status:         ${scan.status}`,
+    `Security Score: ${scan.securityScore ?? "N/A"}/100`,
+    `Risk Level:     ${(scan.riskLevel as string ?? "N/A").toUpperCase()}`,
+    `Total Findings: ${scan.totalFindings ?? 0}`,
+    `Scan Date:      ${scan.createdAt}`,
+    `Report Date:    ${new Date().toISOString()}`,
+    "",
+    "-".repeat(60),
+    "FINDINGS",
+    "-".repeat(60),
+  ];
+
+  const grouped: Record<string, Record<string, unknown>[]> = {};
+  for (const f of findings) {
+    const sev = (f.severity as string) ?? "info";
+    if (!grouped[sev]) grouped[sev] = [];
+    grouped[sev].push(f);
+  }
+
+  for (const sev of ["critical", "high", "medium", "low", "info"]) {
+    const group = grouped[sev];
+    if (!group || group.length === 0) continue;
+    lines.push("", `[${sev.toUpperCase()}]`);
+    for (const f of group) {
+      lines.push(`  • ${f.title}`);
+      lines.push(`    ${f.description}`);
+      if (f.detail) lines.push(`    Detail: ${f.detail}`);
+      if (f.recommendation) lines.push(`    Fix: ${f.recommendation}`);
+    }
+  }
+
+  lines.push("", "=" .repeat(60), "Generated by Cyber Scout Pro", "=" .repeat(60));
+  return lines.join("\n");
+}
+
+export default router;
