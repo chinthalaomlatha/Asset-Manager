@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { useListScans, useDeleteScan, useCreateReport } from "@workspace/api-client-react";
+import { useListScans, useDeleteScan, useCreateReport, useCreateScan, getListScansQueryKey, getListReportsQueryKey } from "@workspace/api-client-react";
 import { format } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Search, Trash2, FileText, Loader2, Download } from "lucide-react";
+import { Clock, Search, Trash2, FileText, Loader2, Download, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { getRiskColorClass, formatRiskLevel, getScoreColorClass } from "@/lib/color-utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
-import { getListReportsQueryKey } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function History() {
@@ -27,7 +26,7 @@ export default function History() {
     if (confirm("Confirm deletion of scan record?")) {
       deleteScan.mutate({ id }, {
         onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ["/api/scans"] });
+          queryClient.invalidateQueries({ queryKey: getListScansQueryKey() });
           toast({
             title: "Record Deleted",
             description: "Scan history record has been expunged.",
@@ -115,6 +114,7 @@ export default function History() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <RescanButton target={scan.target} scanType={scan.scanType ?? "full"} />
                           {scan.status === 'completed' && (
                             <ReportGenerator scanId={scan.id} target={scan.target} />
                           )}
@@ -144,6 +144,52 @@ export default function History() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function RescanButton({ target, scanType }: { target: string; scanType: string }) {
+  const createScan = useCreateScan();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const handleRescan = () => {
+    createScan.mutate(
+      { data: { target, scanType: scanType as "full" | "ports" | "headers" | "ssl" } },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getListScansQueryKey() });
+          toast({
+            title: "Rescan Initiated",
+            description: `New assessment queued for ${target}`,
+          });
+        },
+        onError: () => {
+          toast({
+            title: "Rescan Failed",
+            description: "Unable to initiate new scan. Try again.",
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      data-testid={`button-rescan-${target}`}
+      className="h-8 font-mono text-[10px] rounded-none border-primary/30 text-primary hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity"
+      onClick={handleRescan}
+      disabled={createScan.isPending}
+    >
+      {createScan.isPending ? (
+        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+      ) : (
+        <RefreshCw className="h-3 w-3 mr-1" />
+      )}
+      {createScan.isPending ? "QUEUING..." : "RE-SCAN"}
+    </Button>
   );
 }
 
