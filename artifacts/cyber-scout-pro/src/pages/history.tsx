@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useListScans, useDeleteScan, useCreateReport, useCreateScan, getListScansQueryKey, getListReportsQueryKey } from "@workspace/api-client-react";
+import { useScanNotifier } from "@/lib/scan-notifier";
 import { format } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -151,13 +152,15 @@ function RescanButton({ target, scanType }: { target: string; scanType: string }
   const createScan = useCreateScan();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { watchScan } = useScanNotifier();
 
   const handleRescan = () => {
     createScan.mutate(
       { data: { target, scanType: scanType as "full" | "ports" | "headers" | "ssl" } },
       {
-        onSuccess: () => {
+        onSuccess: (scan) => {
           queryClient.invalidateQueries({ queryKey: getListScansQueryKey() });
+          watchScan(scan.id, target);
           toast({
             title: "Rescan Initiated",
             description: `New assessment queued for ${target}`,

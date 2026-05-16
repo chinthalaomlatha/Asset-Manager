@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useCreateScan, useGetScan, getGetScanQueryKey } from "@workspace/api-client-react";
 import type { ScanDetail } from "@workspace/api-client-react";
+import { useScanNotifier } from "@/lib/scan-notifier";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const scanSchema = z.object({
 export default function Scanner() {
   const [activeScanId, setActiveScanId] = useState<number | null>(null);
   const createScan = useCreateScan();
+  const { watchScan } = useScanNotifier();
 
   const form = useForm<z.infer<typeof scanSchema>>({
     resolver: zodResolver(scanSchema),
@@ -35,6 +37,7 @@ export default function Scanner() {
     createScan.mutate({ data }, {
       onSuccess: (scan) => {
         setActiveScanId(scan.id);
+        watchScan(scan.id, data.target);
       }
     });
   };
