@@ -45,7 +45,7 @@ export default function Dashboard() {
         />
         <StatsCard 
           title="AVG SECURITY SCORE" 
-          value={stats?.avgSecurityScore !== null ? stats?.avgSecurityScore : "N/A"} 
+          value={stats?.avgSecurityScore != null ? stats.avgSecurityScore : "N/A"} 
           icon={<Zap className="h-4 w-4 text-primary" />} 
           valueClass={stats?.avgSecurityScore !== null && stats?.avgSecurityScore !== undefined ? getScoreColorClass(stats.avgSecurityScore).text : ""}
           loading={statsLoading}

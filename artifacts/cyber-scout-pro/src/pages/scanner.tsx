@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useCreateScan, useGetScan, ScanDetail } from "@workspace/api-client-react";
+import { useCreateScan, useGetScan, getGetScanQueryKey } from "@workspace/api-client-react";
+import type { ScanDetail } from "@workspace/api-client-react";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -150,6 +151,7 @@ function ScanMonitor({ scanId }: { scanId: number }) {
 
   const { data: scan, error } = useGetScan(scanId, {
     query: {
+      queryKey: getGetScanQueryKey(scanId),
       refetchInterval: polling ? 3000 : false,
       enabled: !!scanId,
     }
