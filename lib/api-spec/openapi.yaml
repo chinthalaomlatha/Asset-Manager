@@ -3,20 +3,29 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Cyber Scout Pro API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: scans
+    description: Vulnerability scan operations
+  - name: reports
+    description: Report operations
+  - name: users
+    description: User management
+  - name: dashboard
+    description: Dashboard & analytics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +33,335 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /scans:
+    get:
+      operationId: listScans
+      tags: [scans]
+      summary: List all scans for current user
+      responses:
+        "200":
+          description: List of scans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Scan"
+    post:
+      operationId: createScan
+      tags: [scans]
+      summary: Start a new vulnerability scan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScanInput"
+      responses:
+        "201":
+          description: Scan started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Scan"
+
+  /scans/{id}:
+    get:
+      operationId: getScan
+      tags: [scans]
+      summary: Get scan details with findings
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Scan details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteScan
+      tags: [scans]
+      summary: Delete a scan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /reports:
+    get:
+      operationId: listReports
+      tags: [reports]
+      summary: List all reports
+      responses:
+        "200":
+          description: List of reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Report"
+    post:
+      operationId: createReport
+      tags: [reports]
+      summary: Generate a report for a scan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Report created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+
+  /reports/{id}:
+    get:
+      operationId: getReport
+      tags: [reports]
+      summary: Get a report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Report details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Report"
+    delete:
+      operationId: deleteReport
+      tags: [reports]
+      summary: Delete a report
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /dashboard/stats:
+    get:
+      operationId: getDashboardStats
+      tags: [dashboard]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardStats"
+
+  /dashboard/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Get recent scan activity
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /dashboard/risk-breakdown:
+    get:
+      operationId: getRiskBreakdown
+      tags: [dashboard]
+      summary: Get vulnerability risk breakdown
+      responses:
+        "200":
+          description: Risk breakdown by severity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RiskBreakdown"
+
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [users]
+      summary: Admin - list all users
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /admin/users/{id}:
+    patch:
+      operationId: adminUpdateUser
+      tags: [users]
+      summary: Admin - update user role
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: adminDeleteUser
+      tags: [users]
+      summary: Admin - delete user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +372,258 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+
+    RegisterInput:
+      type: object
+      required: [username, email, password]
+      properties:
+        username:
+          type: string
+          minLength: 2
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    User:
+      type: object
+      required: [id, username, email, role, createdAt]
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, user]
+        createdAt:
+          type: string
+          format: date-time
+
+    UserUpdate:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [admin, user]
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    ScanInput:
+      type: object
+      required: [target]
+      properties:
+        target:
+          type: string
+          description: Target URL or hostname to scan
+        scanType:
+          type: string
+          enum: [full, ports, headers, ssl]
+          default: full
+
+    Scan:
+      type: object
+      required: [id, target, status, securityScore, riskLevel, createdAt]
+      properties:
+        id:
+          type: integer
+        target:
+          type: string
+        scanType:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        securityScore:
+          type: ["integer", "null"]
+        riskLevel:
+          type: ["string", "null"]
+          enum: [low, medium, high, critical, null]
+        totalFindings:
+          type: ["integer", "null"]
+        openPortsCount:
+          type: ["integer", "null"]
+        missingHeadersCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+
+    Finding:
+      type: object
+      required: [id, scanId, type, severity, title, description]
+      properties:
+        id:
+          type: integer
+        scanId:
+          type: integer
+        type:
+          type: string
+          enum: [open_port, missing_header, ssl_issue, dangerous_port, recommendation]
+        severity:
+          type: string
+          enum: [info, low, medium, high, critical]
+        title:
+          type: string
+        description:
+          type: string
+        detail:
+          type: ["string", "null"]
+        recommendation:
+          type: ["string", "null"]
+
+    ScanDetail:
+      type: object
+      required: [id, target, status, securityScore, riskLevel, createdAt, findings]
+      properties:
+        id:
+          type: integer
+        target:
+          type: string
+        scanType:
+          type: string
+        status:
+          type: string
+          enum: [pending, running, completed, failed]
+        securityScore:
+          type: ["integer", "null"]
+        riskLevel:
+          type: ["string", "null"]
+          enum: [low, medium, high, critical, null]
+        totalFindings:
+          type: ["integer", "null"]
+        openPortsCount:
+          type: ["integer", "null"]
+        missingHeadersCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: ["string", "null"]
+          format: date-time
+        findings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Finding"
+
+    Report:
+      type: object
+      required: [id, scanId, title, format, content, createdAt]
+      properties:
+        id:
+          type: integer
+        scanId:
+          type: integer
+        title:
+          type: string
+        format:
+          type: string
+          enum: [txt, json]
+        content:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    ReportInput:
+      type: object
+      required: [scanId, format]
+      properties:
+        scanId:
+          type: integer
+        format:
+          type: string
+          enum: [txt, json]
+        title:
+          type: ["string", "null"]
+
+    DashboardStats:
+      type: object
+      required: [totalScans, completedScans, totalVulnerabilities, avgSecurityScore, highRiskTargets, scansThisWeek]
+      properties:
+        totalScans:
+          type: integer
+        completedScans:
+          type: integer
+        totalVulnerabilities:
+          type: integer
+        avgSecurityScore:
+          type: ["number", "null"]
+        highRiskTargets:
+          type: integer
+        scansThisWeek:
+          type: integer
+
+    ActivityItem:
+      type: object
+      required: [id, target, status, riskLevel, securityScore, createdAt]
+      properties:
+        id:
+          type: integer
+        target:
+          type: string
+        status:
+          type: string
+        riskLevel:
+          type: ["string", "null"]
+        securityScore:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+          format: date-time
+
+    RiskBreakdown:
+      type: object
+      required: [critical, high, medium, low, info]
+      properties:
+        critical:
+          type: integer
+        high:
+          type: integer
+        medium:
+          type: integer
+        low:
+          type: integer
+        info:
+          type: integer

@@ -1,0 +1,153 @@
+Use this complete prompt in [Replit AI](https://replit.com?utm_source=chatgpt.com) to recreate and improve your **Cyber Scout Pro** application.
+
+```text id="ndpm57"
+Build a professional AI-powered cybersecurity web application called "Cyber Scout Pro" using Python Flask.
+
+The application should have a modern dark cybersecurity theme with responsive UI and advanced features suitable for internship and GitHub portfolio projects.
+
+Main Requirements:
+
+1. Authentication & Authorization
+- User registration
+- User login/logout
+- Secure password hashing
+- Session management
+- Role-based authorization:
+  - Admin
+  - User
+- Protected dashboard routes
+
+2. Dashboard UI
+- Dark hacker-style interface
+- Responsive design using Bootstrap
+- Navigation sidebar
+- Cybersecurity-themed cards and animations
+- Dashboard statistics:
+  - Total scans
+  - Vulnerabilities detected
+  - Security score
+  - Risk level
+
+3. Vulnerability Scanner Features
+- Scan websites or localhost applications
+- Detect open ports using socket programming
+- Use multithreading for faster scanning
+- Check missing HTTP security headers:
+  - Content-Security-Policy
+  - X-Frame-Options
+  - Strict-Transport-Security
+  - X-Content-Type-Options
+  - Referrer-Policy
+- Detect SSL issues
+- Detect dangerous open ports
+- Display services running on ports
+
+4. AI Security Recommendations
+Generate AI-like recommendations such as:
+- Disable insecure ports
+- Add missing headers
+- Improve HTTPS security
+- Strengthen server protection
+
+5. Security Score System
+Generate:
+- Security Score out of 100
+- Risk Level:
+  - Low
+  - Medium
+  - High
+- Color-coded vulnerability indicators
+
+6. Database Integration
+Use SQLite database to store:
+- Users
+- Scan history
+- Reports
+- Timestamps
+
+7. Report Generation
+- Generate downloadable TXT reports
+- Generate PDF reports
+- Save reports automatically
+
+8. Advanced Features
+- Real-time scan progress
+- Loading animations
+- Scan history page
+- Admin panel
+- Search functionality
+- Recent activity logs
+
+9. Security Features
+- CSRF protection
+- Secure session handling
+- Rate limiting
+- Input validation
+- Error handling
+
+10. Frontend Requirements
+Use:
+- Flask templates
+- HTML
+- CSS
+- Bootstrap
+- JavaScript
+- Chart.js for graphs
+
+11. Backend Requirements
+Use:
+- Flask
+- Flask-Login
+- Flask-WTF
+- Flask-Limiter
+- Werkzeug security
+- Requests
+- Threading
+- Socket programming
+
+12. Generate Full Project Structure
+
+Project structure should include:
+
+Cyber-Scout-Pro/
+│
+├── app.py
+├── scanner.py
+├── auth.py
+├── models.py
+├── requirements.txt
+├── README.md
+│
+├── templates/
+│   ├── login.html
+│   ├── register.html
+│   ├── dashboard.html
+│   ├── results.html
+│   ├── admin.html
+│
+├── static/
+│   ├── style.css
+│   ├── script.js
+│
+├── reports/
+│
+└── database.db
+
+13. README.md
+Generate professional GitHub-ready documentation including:
+- Features
+- Installation
+- Usage
+- Screenshots section
+- Technologies used
+- Deployment instructions
+
+14. Deployment
+Make the application deployable on:
+- Render
+- Replit
+
+15. Final Goal
+The application should look like a real cybersecurity SaaS platform and not like a beginner mini project.
+It should be visually impressive, secure, and professional enough for internship submission and GitHub portfolio showcase.
+```
