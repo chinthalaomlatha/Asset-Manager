@@ -302,7 +302,7 @@ function ScanResults({ findings }: { findings: ScanDetail['findings'] }) {
               {vulnerabilities.map(vuln => (
                 <div key={vuln.id} className="p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex items-start justify-between gap-4">
-                    <div className="space-y-2">
+                    <div className="space-y-2 flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         {getSeverityIcon(vuln.severity)}
                         <h4 className="font-mono font-bold text-sm text-foreground">{vuln.title}</h4>
@@ -313,6 +313,14 @@ function ScanResults({ findings }: { findings: ScanDetail['findings'] }) {
                           <code className="bg-background/80 border border-border/50 p-2 block font-mono text-[10px] text-primary break-all rounded-sm">
                             {vuln.detail}
                           </code>
+                        </div>
+                      )}
+                      {vuln.recommendation && (
+                        <div className="pl-6 mt-2 flex items-start gap-2">
+                          <CheckCircle className="w-3 h-3 text-primary shrink-0 mt-0.5" />
+                          <p className="font-mono text-[10px] text-primary/80 leading-relaxed">
+                            <span className="text-primary font-bold">FIX: </span>{vuln.recommendation}
+                          </p>
                         </div>
                       )}
                     </div>
